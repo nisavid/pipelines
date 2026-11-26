@@ -21,7 +21,7 @@ jobs:
       - name: Record pull request event and select fixture case
         id: select-case
         env:
-          FIXTURE_CASE: extra-failure
+          FIXTURE_CASE: success
           PR_NUMBER: ${{ github.event.number }}
           PR_ACTION: ${{ github.event.action }}
           PR_BASE: ${{ github.base_ref }}

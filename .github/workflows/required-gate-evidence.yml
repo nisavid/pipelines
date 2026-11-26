@@ -82,7 +82,7 @@ jobs:
 
   required:
     name: CI gate
-    needs: [build, test]
+    needs: [build, test, extra]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 1

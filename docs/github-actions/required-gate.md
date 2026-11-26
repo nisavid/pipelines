@@ -21,7 +21,8 @@ into your workflow and wire it to your real jobs.
    treat a skipped job as satisfying a required check. The gate must run and
    explicitly fail on a non-success result. Keep it short and self-contained
    so it can finish during ordinary cancellation. Whole-run cancellation can
-   still prevent a gate from reaching its shell step.
+   still prevent a gate from reaching its shell step. The gate sets `shell`
+   and `working-directory` to override workflow `defaults.run`.
    [Required status check troubleshooting](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks#handling-skipped-but-required-checks),
    [Expressions](https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#always),
    [Workflow cancellation](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-cancellation)
@@ -32,9 +33,14 @@ into your workflow and wire it to your real jobs.
 
 ## Run it for every change that can merge
 
-- Use `pull_request` with its default `opened`, `synchronize`, and `reopened`
-  activity types. Avoid `paths` and `paths-ignore` on the gating workflow and
-  any filter that excludes a pull request targeting the protected branch.
+- Keep `pull_request` unfiltered by target branch so the gate can report
+  before a pull request is retargeted onto the protected branch. Changing only
+  the target branch emits `edited`, which the default activity types (`opened`,
+  `synchronize`, and `reopened`) omit. If a target-branch filter is unavoidable,
+  set `types: [opened, synchronize, reopened, edited]`. A retarget made with
+  `GITHUB_TOKEN` still creates no run. Have a user push a new commit to the
+  pull request's head branch or reopen the pull request to trigger a run.
+  Avoid `paths` and `paths-ignore` on the gating workflow.
   Skip directives in commit messages can also leave required checks pending.
   [Workflow events](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request),
   [Required status check troubleshooting](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks#handling-skipped-but-required-checks)

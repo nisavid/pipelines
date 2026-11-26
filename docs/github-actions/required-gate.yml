@@ -31,6 +31,7 @@ jobs:
       - name: Check required job results
         if: ${{ always() }}
         shell: sh
+        working-directory: .
         env:
           BUILD_RESULT: ${{ needs.build.result }}
           TEST_RESULT: ${{ needs.test.result }}

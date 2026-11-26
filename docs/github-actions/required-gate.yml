@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  pull_request:
+  merge_group:
+    types: [checks_requested]
+
+permissions: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Replace with the project's build
+        run: exit 1
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Replace with the project's tests
+        run: exit 1
+
+  required:
+    name: CI gate
+    needs: [build, test]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    permissions: {}
+    steps:
+      - name: Check required job results
+        if: ${{ always() }}
+        shell: sh
+        env:
+          BUILD_RESULT: ${{ needs.build.result }}
+          TEST_RESULT: ${{ needs.test.result }}
+        run: |
+          printf 'build: %s\ntest: %s\n' "$BUILD_RESULT" "$TEST_RESULT"
+          if [ "$BUILD_RESULT" != success ] || [ "$TEST_RESULT" != success ]; then
+            exit 1
+          fi

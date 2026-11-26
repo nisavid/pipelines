@@ -4,4 +4,6 @@ Shared home for pipeline planning and building blocks across the software we mai
 
 The repository tracks the shared planning work, decisions, and CI vocabulary. It can hold reusable workflow and pipeline components for the providers in use. CI remains a workflow and search alias for Software Integration; continuous integration is its current operating method.
 
+Use the [GitHub Actions gate job reference](docs/github-actions/required-gate.md) when setting up required status checks.
+
 The CI-provider evaluation lives in a separate, time-boxed repository, `ci-evals`, in the nisavid-io organization.

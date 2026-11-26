@@ -1,0 +1,60 @@
+name: Gate job evidence
+
+on:
+  push:
+    branches: [nisavid/gate-job-reference]
+
+permissions: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - shell: sh
+        run: ':'
+
+  test:
+    if: >-
+      ${{ !startsWith(github.event.head_commit.message, 'test(ci): run gate evidence (skipped)') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    concurrency:
+      group: gate-job-evidence-test-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Produce the requested test job result
+        shell: sh
+        env:
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          case "$COMMIT_MESSAGE" in
+            'test(ci): run gate evidence (failure)'*) exit 1 ;;
+            'test(ci): run gate evidence (holding)'*)
+              printf '%s\n' 'Waiting for the replacement test job'
+              sleep 600
+              exit 2
+              ;;
+            'test(ci): run gate evidence (success)'*) exit 0 ;;
+            *) printf '%s\n' 'Unrecognized evidence case' >&2; exit 2 ;;
+          esac
+
+  required:
+    name: CI gate
+    needs: [build, test]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    permissions: {}
+    steps:
+      - name: Check required job results
+        if: ${{ always() }}
+        shell: sh
+        working-directory: .
+        env:
+          BUILD_RESULT: ${{ needs.build.result }}
+          TEST_RESULT: ${{ needs.test.result }}
+        run: |
+          printf 'build: %s\ntest: %s\n' "$BUILD_RESULT" "$TEST_RESULT"
+          if [ "$BUILD_RESULT" != success ] || [ "$TEST_RESULT" != success ]; then
+            exit 1
+          fi

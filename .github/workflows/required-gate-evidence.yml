@@ -1,0 +1,106 @@
+name: Required gate evidence
+run-name: Required gate evidence / PR ${{ github.event.number }} / ${{ github.event.action }} / ${{ github.base_ref }}
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+permissions: {}
+
+defaults:
+  run:
+    shell: sh
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    outputs:
+      case: ${{ steps.select-case.outputs.case }}
+    steps:
+      - name: Record pull request event and select fixture case
+        id: select-case
+        env:
+          FIXTURE_CASE: success
+          PR_NUMBER: ${{ github.event.number }}
+          PR_ACTION: ${{ github.event.action }}
+          PR_BASE: ${{ github.base_ref }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_BASE_FROM: ${{ github.event.changes.base.ref.from }}
+          PR_BODY_CHANGED: ${{ github.event.changes.body != null }}
+          PR_TITLE_CHANGED: ${{ github.event.changes.title != null }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          MERGE_SHA: ${{ github.sha }}
+        run: |
+          printf 'PR: %s\nAction: %s\nBase: %s\nBase SHA: %s\nHead SHA: %s\nMerge SHA: %s\n' \
+            "$PR_NUMBER" "$PR_ACTION" "$PR_BASE" "$PR_BASE_SHA" "$PR_HEAD_SHA" "$MERGE_SHA"
+          printf 'Base from: %s\nBody changed: %s\nTitle changed: %s\n' \
+            "$PR_BASE_FROM" "$PR_BODY_CHANGED" "$PR_TITLE_CHANGED"
+
+          selected_case=success
+          if [ "$PR_ACTION" = synchronize ]; then
+            selected_case=$FIXTURE_CASE
+          fi
+          printf 'Fixture case: %s\n' "$selected_case"
+          printf 'case=%s\n' "$selected_case" >> "$GITHUB_OUTPUT"
+
+  test:
+    needs: build
+    if: ${{ needs.build.outputs.case != 'skip' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    concurrency:
+      group: pipelines-required-gate-evidence-test-${{ github.event.number }}-${{ github.event.action == 'synchronize' && 'synchronize' || github.run_id }}
+      cancel-in-progress: ${{ github.event.action == 'synchronize' }}
+    steps:
+      - name: Return the selected dependency outcome
+        env:
+          EVIDENCE_CASE: ${{ needs.build.outputs.case }}
+        run: |
+          case "$EVIDENCE_CASE" in
+            cancel)
+              printf '%s\n' 'Waiting for a newer synchronize run to cancel this job.'
+              sleep 240
+              printf '%s\n' 'The cancellation window expired.'
+              exit 1
+              ;;
+            failure) exit 1 ;;
+          esac
+
+  extra:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Demonstrate adding an existing job to needs
+        env:
+          EVIDENCE_CASE: ${{ needs.build.outputs.case }}
+        run: |
+          if [ "$EVIDENCE_CASE" = extra-failure ]; then
+            exit 1
+          fi
+
+  required:
+    name: CI gate
+    needs: [build, test]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    permissions: {}
+    steps:
+      - name: Check required job results
+        if: ${{ always() }}
+        shell: sh
+        working-directory: .
+        env:
+          NEEDS_RESULTS: ${{ join(needs.*.result, ',') }}
+        run: |
+          printf 'Needed job results: %s\n' "$NEEDS_RESULTS"
+          remaining=$NEEDS_RESULTS
+          while :; do
+            case "$remaining" in
+              success) exit 0 ;;
+              success,*) remaining=${remaining#*,} ;;
+              *) exit 1 ;;
+            esac
+          done

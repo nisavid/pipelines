@@ -56,9 +56,13 @@ is `success`. The example uses `build` and `test` as placeholders. Copy
   automation emits `edited`. The event starts another workflow run unless the
   edit uses `GITHUB_TOKEN`. If an app writes summaries into the description,
   configure it to post them in a comment. For CodeRabbit, set
-  `high_level_summary_in_walkthrough` to `true` under `reviews` in
-  `.coderabbit.yaml` to put the summary in the walkthrough comment.
-  [CodeRabbit PR summaries](https://docs.coderabbit.ai/pr-reviews/summaries#moving-the-summary-to-the-walkthrough)
+  `high_level_summary_in_walkthrough` to `true` under `reviews` in a V2
+  `.coderabbit.yaml` to put the summary in the walkthrough comment. On
+  CodeRabbit Cloud, you can also set it in Organization defaults. That value
+  can apply when the defaults are the starting configuration or when
+  inheritance reaches them with the setting still unset.
+  [CodeRabbit PR summaries](https://docs.coderabbit.ai/pr-reviews/summaries#moving-the-summary-to-the-walkthrough),
+  [CodeRabbit configuration resolution](https://docs.coderabbit.ai/configuration/resolution)
 - Leave `pull_request` unfiltered by base branch and avoid `paths` and
   `paths-ignore` on the gating workflow. Workflow filters and skip directives
   in commit messages can leave required checks pending. Resolve merge conflicts

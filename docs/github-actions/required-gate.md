@@ -57,14 +57,16 @@ is `success`. The example uses `build` and `test` as placeholders. Copy
   edit uses `GITHUB_TOKEN`. If an app writes summaries into the description,
   configure it to post them in a comment. For CodeRabbit, set the V2 key
   `reviews.high_level_summary_in_walkthrough` to `true` to put the summary in
-  the walkthrough comment. Set it where the repository's CodeRabbit settings
-  already come from: on CodeRabbit Cloud, that can be the organization's
-  settings, with no configuration file in the repository. Adding a
+  the walkthrough comment. First, post `@coderabbitai configuration` as the
+  entire text of a comment on an open pull request and keep the reply; its
+  `# Source:` comments show where each setting comes from. Set the key there:
+  on CodeRabbit Cloud, that can be the organization's settings, with no
+  configuration file in the repository. If only defaults apply, a new
+  `.coderabbit.yaml` or the organization's settings both work. Adding a
   configuration file, or changing an existing one, can change which of the
-  other settings apply. On the first pull request after the change, post
-  `@coderabbitai configuration` as the entire text of a comment. In the reply,
-  check that the setting is `true` and that the `# Source:` comments still
-  name the sources you expect for the other settings.
+  other settings apply. On the first pull request after the change, post the
+  command again: the setting should be `true`, and no other value should
+  differ from the first reply.
   [CodeRabbit PR summaries](https://docs.coderabbit.ai/pr-reviews/summaries#moving-the-summary-to-the-walkthrough),
   [CodeRabbit configuration resolution](https://docs.coderabbit.ai/configuration/resolution),
   [Check which configuration a review used](https://docs.coderabbit.ai/configuration/guides/check-effective-configuration)

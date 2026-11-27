@@ -1,0 +1,32 @@
+# Temporary do-not-merge probe (W2b): does a bot-edited sticky comment wake the bound session?
+name: wake-probe
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions: {}
+
+jobs:
+  sticky-comment:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Post or edit the sticky comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          marker='<!-- wake-probe-w2b -->'
+          body="${marker}
+          Wake probe (W2b): head ${SHA}, written $(date -u +%H:%M:%SZ) by the workflow."
+          id=$(gh api "repos/${REPO}/issues/${PR}/comments" --paginate \
+            --jq ".[] | select(.user.login == \"github-actions[bot]\" and (.body | contains(\"${marker}\"))) | .id" | head -n 1)
+          if [ -n "${id}" ]; then
+            gh api -X PATCH "repos/${REPO}/issues/comments/${id}" -f body="${body}"
+          else
+            gh api "repos/${REPO}/issues/${PR}/comments" -f body="${body}"
+          fi

@@ -2,6 +2,7 @@ name: CI
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, edited]
   merge_group:
     types: [checks_requested]
 
@@ -33,10 +34,14 @@ jobs:
         shell: sh
         working-directory: .
         env:
-          BUILD_RESULT: ${{ needs.build.result }}
-          TEST_RESULT: ${{ needs.test.result }}
+          NEEDS_RESULTS: ${{ join(needs.*.result, ',') }}
         run: |
-          printf 'build: %s\ntest: %s\n' "$BUILD_RESULT" "$TEST_RESULT"
-          if [ "$BUILD_RESULT" != success ] || [ "$TEST_RESULT" != success ]; then
-            exit 1
-          fi
+          printf 'Needed job results: %s\n' "$NEEDS_RESULTS"
+          remaining=$NEEDS_RESULTS
+          while :; do
+            case "$remaining" in
+              success) exit 0 ;;
+              success,*) remaining=${remaining#*,} ;;
+              *) exit 1 ;;
+            esac
+          done

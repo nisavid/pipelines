@@ -57,16 +57,13 @@ is `success`. The example uses `build` and `test` as placeholders. Copy
   edit uses `GITHUB_TOKEN`. If an app writes summaries into the description,
   configure it to post them in a comment. For CodeRabbit, set the V2 key
   `reviews.high_level_summary_in_walkthrough` to `true` to put the summary in
-  the walkthrough comment. First, post `@coderabbitai configuration` as the
-  entire text of a comment on an open pull request and keep the reply; its
-  `# Source:` comments show where each setting comes from. Set the key there:
-  on CodeRabbit Cloud, that can be the organization's settings, with no
-  configuration file in the repository. If only defaults apply, a new
-  `.coderabbit.yaml` or the organization's settings both work. Adding a
-  configuration file, or changing an existing one, can change which of the
-  other settings apply. On the first pull request after the change, post the
-  command again: the setting should be `true`, and no other value should
-  differ from the first reply.
+  the walkthrough comment. Do not add this key to a `version: 3`
+  configuration file. CodeRabbit settings can come from the organization or
+  a repository file, so follow CodeRabbit's documentation and change the
+  setting where the repository's settings are managed. On the first pull
+  request that opens after the change and gets a CodeRabbit review, wait for
+  the review to finish, then check that CodeRabbit did not edit the
+  description.
   [CodeRabbit PR summaries](https://docs.coderabbit.ai/pr-reviews/summaries#moving-the-summary-to-the-walkthrough),
   [CodeRabbit configuration resolution](https://docs.coderabbit.ai/configuration/resolution),
   [Check which configuration a review used](https://docs.coderabbit.ai/configuration/guides/check-effective-configuration)
@@ -80,6 +77,11 @@ is `success`. The example uses `build` and `test` as placeholders. Copy
   Make sure required jobs can run on the merge group's commit and that any
   applicability logic works without a pull request payload.
   [Merge group event](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#merge_group)
+- The example triggers only on `pull_request` and `merge_group`. Keeping a
+  `push` trigger on a gating workflow can add a second gate result under the
+  same name to a pull request's head, and the two results can differ.
+  Drop `push` from gating workflows, or move it to a separate workflow whose
+  gate has its own name.
 - With `GITHUB_TOKEN`, `opened`, `synchronize`, and `reopened` create runs that
   a user with write access must approve. A retarget using `GITHUB_TOKEN` emits
   `edited` and creates no run. After such a retarget, have a maintainer push a

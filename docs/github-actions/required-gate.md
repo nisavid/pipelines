@@ -52,11 +52,12 @@ is `success`. The example uses `build` and `test` as placeholders. Copy
   [Pull request webhook](https://docs.github.com/en/webhooks/webhook-events-and-payloads#pull_request),
   [Required status check troubleshooting](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks#handling-skipped-but-required-checks),
   [Workflow concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency)
-- Like a person's edit, a GitHub App's edit to the pull request title or
-  description emits `edited` and starts another workflow run. If an app writes
-  summaries into the description, configure it to post them in a comment. For
-  CodeRabbit, set `reviews.high_level_summary_in_walkthrough: true` in
-  `.coderabbit.yaml` to put the summary in the walkthrough comment.
+- Like a person's edit, a title or description edit by a GitHub App or other
+  automation emits `edited`. The event starts another workflow run unless the
+  edit uses `GITHUB_TOKEN`. If an app writes summaries into the description,
+  configure it to post them in a comment. For CodeRabbit, set
+  `reviews.high_level_summary_in_walkthrough: true` in `.coderabbit.yaml` to
+  put the summary in the walkthrough comment.
   [CodeRabbit PR summaries](https://docs.coderabbit.ai/pr-reviews/summaries#moving-the-summary-to-the-walkthrough)
 - Leave `pull_request` unfiltered by base branch and avoid `paths` and
   `paths-ignore` on the gating workflow. Workflow filters and skip directives

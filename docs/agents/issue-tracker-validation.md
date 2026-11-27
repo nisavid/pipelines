@@ -2,7 +2,7 @@
 
 These are protocol walkthroughs for `issue-tracker.md`, which is consumed by an external `/wayfinder` agent. This repository has no executable Wayfinder consumer or automated protocol test suite. Evaluate each case against the documented gate without mutating real issues; this does not establish that an external implementation follows the protocol.
 
-Use a user-selected map `github.com/example/project#10` (database ID 100), labelled `wayfinder:map`, whose task list contains `- [ ] #20`. Its registered child `#20` (database ID 200) is an Issue with first body line `Part of #10`, labels `wayfinder:parent:10` and `wayfinder:task`, open state, no assignees, and no open blockers. Label administrators and membership registration are trusted. Each row starts from this valid fixture unless it specifies otherwise.
+Use a requester-selected map `github.com/example/project#10` (database ID 100), labelled `wayfinder:map`, whose task list contains `- [ ] #20`. Its registered child `#20` (database ID 200) is an Issue with first body line `Part of #10`, labels `wayfinder:parent:10` and `wayfinder:task`, open state, no assignees, and no open blockers. Label administrators and membership registration are trusted. Each row starts from this valid fixture unless it specifies otherwise.
 
 | Case | Change or action | Required result |
 | --- | --- | --- |

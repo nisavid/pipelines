@@ -28,7 +28,7 @@ enforces them through the `commit-msg` and `pre-push` hooks that
 ## Operating Policy
 
 - This repository uses agentic engineering and operations. Agents should perform assigned tasks autonomously until they reach a boundary that requires stakeholder policy or an unavailable control surface.
-- The user reserves authority over project initiatives and over initiation or continuation of work sessions. Within an active user-directed session, agents should drive execution, review loops, commits, publication steps, and cleanup unless escalation is required.
+- The human operator (the person these agents act for, never an agent that directs your work) reserves authority over project initiatives and over initiation or continuation of work sessions. Within an active requester-directed session, agents should drive execution, review loops, commits, publication steps, and cleanup unless escalation is required.
 - Escalate when a decision or action impacts stakeholder concerns and the stakeholder's policy is unknown or uncertain.
 - Escalate when an action must be taken but the agent lacks an autonomous control surface for it.
 - When escalating a decision and a set of plausible, distinct choices is known, use a multiple-choice input tool if one is available in the interactive context. Include a way for the human operator to provide custom input.

@@ -58,11 +58,16 @@ is `success`. The example uses `build` and `test` as placeholders. Copy
   configure it to post them in a comment. For CodeRabbit, set
   `high_level_summary_in_walkthrough` to `true` under `reviews` in a V2
   `.coderabbit.yaml` to put the summary in the walkthrough comment. On
-  CodeRabbit Cloud, you can also set it in Organization defaults. That value
-  can apply when the defaults are the starting configuration or when
-  inheritance reaches them with the setting still unset.
+  CodeRabbit Cloud, the setting can come from the organization even when the
+  repository has no CodeRabbit configuration file. Organization defaults can
+  supply it when they are the starting configuration or when inheritance
+  reaches them with the setting still unset. Organization global overrides
+  can take precedence regardless of inheritance. On the first pull request,
+  post `@coderabbitai configuration` as a comment and check the setting's
+  value and its `# Source:` in the reply.
   [CodeRabbit PR summaries](https://docs.coderabbit.ai/pr-reviews/summaries#moving-the-summary-to-the-walkthrough),
-  [CodeRabbit configuration resolution](https://docs.coderabbit.ai/configuration/resolution)
+  [CodeRabbit configuration resolution](https://docs.coderabbit.ai/configuration/resolution),
+  [Check which configuration a review used](https://docs.coderabbit.ai/configuration/guides/check-effective-configuration)
 - Leave `pull_request` unfiltered by base branch and avoid `paths` and
   `paths-ignore` on the gating workflow. Workflow filters and skip directives
   in commit messages can leave required checks pending. Resolve merge conflicts

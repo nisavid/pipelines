@@ -11,9 +11,12 @@ is `success`. The example uses `build` and `test` as placeholders. Copy
    listed job already depends on it. To add an existing job to the gate, edit
    `needs`. The step reads `needs.*.result` for all direct dependencies and
    fails on `failure`, `cancelled`, `skipped`, or any other value besides
-   `success`. The log lists the results in an unspecified order. Use the run's
-   job list to see which job reported each result. Leave `continue-on-error`
-   off for required work.
+   `success`. The gate relies on GitHub supplying a documented `result` for
+   each direct dependency because `needs.*.result` omits dependencies without
+   that property. With one `success` and one missing `result`, the gate would
+   pass. The log lists the results in an unspecified order. Use the run's job
+   list to see which job reported each result. Leave `continue-on-error` off
+   for required work.
    [GitHub Actions contexts](https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#needs-context),
    [Object filters](https://docs.github.com/en/actions/reference/workflows-and-actions/expressions#object-filters)
 2. For required work that only applies to some changes, keep its job eligible
@@ -42,10 +45,13 @@ is `success`. The example uses `build` and `test` as placeholders. Copy
   against the new test merge commit. Title and description edits also emit
   `edited` and run the workflow. Keep the required jobs and gate eligible on
   those edits. Skipping a needed job fails the gate, and skipping the gate
-  itself can satisfy the required check.
+  itself can satisfy the required check. If you use `cancel-in-progress: true`
+  in a concurrency group shared by all runs for a pull request, verify after
+  an edit that the replacement gate run finished against the intended base.
   [Workflow events](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request),
   [Pull request webhook](https://docs.github.com/en/webhooks/webhook-events-and-payloads#pull_request),
-  [Required status check troubleshooting](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks#handling-skipped-but-required-checks)
+  [Required status check troubleshooting](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks#handling-skipped-but-required-checks),
+  [Workflow concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency)
 - Leave `pull_request` unfiltered by base branch and avoid `paths` and
   `paths-ignore` on the gating workflow. Workflow filters and skip directives
   in commit messages can leave required checks pending. Resolve merge conflicts

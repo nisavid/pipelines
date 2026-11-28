@@ -105,7 +105,9 @@ the workflow run.
 Copy `jobs.gate-passed` from the [reference workflow](required-gate.yml) into
 your workflow. Match `GATE_NAME` to the gate's name. The gate still ends the
 workflow's required work. Keep the comment job out of the gate's `needs` and
-out of the branch's required checks. The comment reports one gate's result.
+out of the branch's required checks. If only the comment job fails, the pull
+request shows a failed advisory check. The workflow run still succeeds, and
+the gate's check stays successful. The comment reports one gate's result.
 Other required checks can still be pending or failing. Anyone the comment
 wakes still needs to read the pull request's checks before acting.
 
@@ -113,9 +115,9 @@ The job skips merge-queue runs, pull requests from forks, and pull requests
 that Dependabot opened or whose run Dependabot started.
 
 A new comment triggers notifications. Who receives them depends on
-subscriptions, such as those from participating in the pull request or
-watching the repository. Add this job only where something waits on the
-repository's pull requests.
+subscriptions. For example, the pull request's author can receive a
+notification. Add this job only where something waits on the repository's
+pull requests.
 [Create an issue comment](https://docs.github.com/en/rest/issues/comments#create-an-issue-comment),
 [About notifications](https://docs.github.com/en/subscriptions-and-notifications/concepts/about-notifications)
 

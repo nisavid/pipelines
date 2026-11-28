@@ -130,11 +130,13 @@ Set `GATE_PASSED_MODE` in the comment job:
   when something waiting on the pull request needs a fresh comment for each
   green head.
 - `sticky` creates a comment for the gate and updates it with the SHA of each
-  new head that passes. Choose it to keep the result in one place. Before
-  writing, the job reads the pull request's current head and skips the write
-  unless the read returns the run's head SHA. If the head changes between the
-  read and the write, runs for different heads can still create two comments
-  or update the same comment out of order.
+  new head that passes. Choose it to keep the result in one place. Later heads
+  edit this comment and add no new one, so use `per-head` if something waiting
+  on the pull request needs a new comment for each green head. Before writing,
+  the job reads the pull request's current head and skips the write unless the
+  read returns the run's head SHA. If the head changes between the read and
+  the write, runs for different heads can still create two comments or update
+  the same comment out of order.
   The job's concurrency group covers one workflow, pull request, and head.
   [Workflow concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency)
 

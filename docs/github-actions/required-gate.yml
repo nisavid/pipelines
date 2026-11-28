@@ -45,3 +45,87 @@ jobs:
               *) exit 1 ;;
             esac
           done
+
+  # Optional. See "Opt in to a gate-passed comment" in required-gate.md.
+  gate-passed:
+    needs: [required]
+    if: >-
+      needs.required.result == 'success' &&
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'dependabot[bot]' &&
+      github.event.pull_request.user.login != 'dependabot[bot]'
+    env:
+      GATE_PASSED_MODE: per-head
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    continue-on-error: true
+    timeout-minutes: 1
+    concurrency:
+      group: gate-passed-${{ github.workflow_ref }}-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+      cancel-in-progress: false
+    steps:
+      - name: Comment on the pull request
+        shell: bash
+        working-directory: .
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GATE_NAME: CI gate # Match jobs.required.name.
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          : "${GATE_PASSED_MODE:=per-head}"
+          unset GH_TOKEN # Use this job's GITHUB_TOKEN.
+
+          head_marker_prefix="<!-- gate-passed:$GATE_NAME:"
+          head_marker="$head_marker_prefix$PR_HEAD_SHA -->"
+          sticky_marker="<!-- gate-passed:$GATE_NAME -->"
+          body=$(printf '%s passed at %s.\n\n%s' "$GATE_NAME" "${PR_HEAD_SHA:0:7}" "$head_marker")
+          case "$GATE_PASSED_MODE" in
+            per-head) marker=$head_marker ;;
+            sticky)
+              marker=$sticky_marker
+              body+=$'\n'"$marker"
+              ;;
+            *)
+              printf 'Unknown GATE_PASSED_MODE: %s\n' "$GATE_PASSED_MODE" >&2
+              exit 1
+              ;;
+          esac
+
+          issues="repos/$GITHUB_REPOSITORY/issues"
+          comments="$issues/$PR_NUMBER/comments"
+          existing=$(gh api --paginate --slurp "$comments?per_page=100" |
+            jq -c --arg gate "$GATE_NAME" --arg head_marker_prefix "$head_marker_prefix" \
+              --arg sticky_marker "$sticky_marker" --arg marker "$marker" '
+              def per_head_body($sha): "\($gate) passed at \($sha[0:7]).\n\n\($head_marker_prefix)\($sha) -->";
+              first(.[][] | select(.user.login == "github-actions[bot]") |
+                (.body // "") as $body | ($body | split("\n")) as $lines |
+                select(($lines | length) >= 3 and ($lines[2] | startswith($head_marker_prefix))) |
+                ($lines[2] | ltrimstr($head_marker_prefix) | rtrimstr(" -->")) as $sha |
+                select(($sha | test("^[0-9a-f]{40}$")) and
+                  ($body == per_head_body($sha) or $body == per_head_body($sha) + "\n" + $sticky_marker) and
+                  ($lines[2] == $marker or $lines[3] == $marker))) // empty
+            ')
+          if [[ "$GATE_PASSED_MODE" == sticky ]]; then
+            current_head=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" --jq '.head.sha // empty')
+            if [[ -z "$current_head" ]]; then
+              printf 'Could not read the current pull request head.\n' >&2
+              exit 1
+            fi
+            if [[ "$current_head" != "$PR_HEAD_SHA" ]]; then
+              printf 'Skipping sticky comment for %s. Pull request head is %s.\n' "$PR_HEAD_SHA" "$current_head"
+              exit 0
+            fi
+          fi
+
+          if [[ -z "$existing" ]]; then
+            gh api --silent --method POST "$comments" -f "body=$body"
+          elif [[ "$GATE_PASSED_MODE" == sticky ]]; then
+            if [[ $(jq -r '.body' <<< "$existing") != "$body" ]]; then
+              comment_id=$(jq -r '.id' <<< "$existing")
+              gh api --silent --method PATCH "$issues/comments/$comment_id" -f "body=$body"
+            fi
+          fi

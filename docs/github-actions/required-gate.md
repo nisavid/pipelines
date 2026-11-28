@@ -99,3 +99,56 @@ After the gate reports successfully, add its reported check name (for example,
 gating workflow. Keep the individual job results available for diagnosis in
 the workflow run.
 [Available rules for rulesets](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets#require-status-checks-to-pass-before-merging)
+
+## Opt in to a gate-passed comment
+
+Copy `jobs.gate-passed` from the [reference workflow](required-gate.yml) into
+your workflow. Match `GATE_NAME` to the gate's name. The gate still ends the
+workflow's required work. Keep the comment job out of the gate's `needs` and
+out of the branch's required checks. If only the comment job fails, the pull
+request shows a failed advisory check. The workflow run still succeeds, and
+the gate's check stays successful. The comment reports one gate's result.
+Other required checks can still be pending or failing. Anyone the comment
+wakes still needs to read the pull request's checks before acting.
+
+The job skips merge-queue runs, pull requests from forks, and pull requests
+that Dependabot opened or whose run Dependabot started.
+
+A new comment triggers notifications. Who receives them depends on
+subscriptions. For example, the pull request's author can receive a
+notification. Add this job only where something waits on the repository's
+pull requests.
+[Create an issue comment](https://docs.github.com/en/rest/issues/comments#create-an-issue-comment),
+[About notifications](https://docs.github.com/en/subscriptions-and-notifications/concepts/about-notifications)
+
+The job posts with `GITHUB_TOKEN`, so its comments start no workflow runs.
+[Triggering a workflow from a workflow](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow)
+
+Set `GATE_PASSED_MODE` in the comment job:
+
+- `per-head` (default) posts a new comment for each head that passes. Choose it
+  when something waiting on the pull request needs a fresh comment for each
+  green head.
+- `sticky` creates a comment for the gate and updates it with the SHA of each
+  new head that passes. Choose it to keep the result in one place. Later heads
+  edit this comment and add no new one, so use `per-head` if something waiting
+  on the pull request needs a new comment for each green head. Before writing,
+  the job reads the pull request's current head and skips the write unless the
+  read returns the run's head SHA. If the head changes between the read and
+  the write, runs for different heads can still create two comments or update
+  the same comment out of order.
+  The job's concurrency group covers one workflow, pull request, and head.
+  [Workflow concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency)
+
+The job writes at most one per-head comment for each head SHA. A base change
+leaves the head SHA unchanged, and a force-push can restore an earlier head.
+In `per-head` mode, the job skips posting if it already has a comment for
+that head. Switching to `sticky` can add a comment on the same head because
+that mode creates its own comment if none exists. It updates an existing
+sticky comment only when the comment records a different head.
+
+Keep the comment job on `pull_request` with the same-repository check.
+`pull_request_target` would run with the base repository's token on other
+people's pull requests.
+[Workflow events](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request_target),
+[GITHUB_TOKEN](https://docs.github.com/en/actions/concepts/security/github_token)

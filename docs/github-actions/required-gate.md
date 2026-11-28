@@ -52,6 +52,21 @@ is `success`. The example uses `build` and `test` as placeholders. Copy
   [Pull request webhook](https://docs.github.com/en/webhooks/webhook-events-and-payloads#pull_request),
   [Required status check troubleshooting](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks#handling-skipped-but-required-checks),
   [Workflow concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency)
+- Like a person's edit, a title or description edit by a GitHub App or other
+  automation emits `edited`. The event starts another workflow run unless the
+  edit uses `GITHUB_TOKEN`. If an app writes summaries into the description,
+  configure it to post them in a comment. For CodeRabbit, set the V2 key
+  `reviews.high_level_summary_in_walkthrough` to `true` to put the summary in
+  the walkthrough comment. Do not add this key to a `version: 3`
+  configuration file. CodeRabbit settings can come from the organization or
+  a repository file, so follow CodeRabbit's documentation and change the
+  setting where the repository's settings are managed. On the first pull
+  request that opens after the change and gets a CodeRabbit review, wait for
+  the review to finish, then check that CodeRabbit did not edit the
+  description.
+  [CodeRabbit PR summaries](https://docs.coderabbit.ai/pr-reviews/summaries#moving-the-summary-to-the-walkthrough),
+  [CodeRabbit configuration resolution](https://docs.coderabbit.ai/configuration/resolution),
+  [Check which configuration a review used](https://docs.coderabbit.ai/configuration/guides/check-effective-configuration)
 - Leave `pull_request` unfiltered by base branch and avoid `paths` and
   `paths-ignore` on the gating workflow. Workflow filters and skip directives
   in commit messages can leave required checks pending. Resolve merge conflicts
@@ -62,6 +77,11 @@ is `success`. The example uses `build` and `test` as placeholders. Copy
   Make sure required jobs can run on the merge group's commit and that any
   applicability logic works without a pull request payload.
   [Merge group event](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#merge_group)
+- The example triggers only on `pull_request` and `merge_group`. Keeping a
+  `push` trigger on a gating workflow can add a second gate result under the
+  same name to a pull request's head, and the two results can differ.
+  Drop `push` from gating workflows, or move it to a separate workflow whose
+  gate has its own name.
 - With `GITHUB_TOKEN`, `opened`, `synchronize`, and `reopened` create runs that
   a user with write access must approve. A retarget using `GITHUB_TOKEN` emits
   `edited` and creates no run. After such a retarget, have a maintainer push a
